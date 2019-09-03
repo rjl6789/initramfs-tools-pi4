@@ -1,4 +1,6 @@
 # initramfs-tools-pi4
+initram for pi4 with wifi
+need cryptsetup, dropbear-run, busybox - note NOT dropbear-initramfs
 
 ## Setup
 ```sh
