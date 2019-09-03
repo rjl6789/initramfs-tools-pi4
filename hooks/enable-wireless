@@ -1,0 +1,34 @@
+#!/bin/sh
+set -e
+PREREQ=""
+prereqs()
+{
+    echo "${PREREQ}"
+}
+case "${1}" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+myFiles="/etc/initramfs-tools/customised_files"
+
+# CHANGE HERE for your correct modules.
+manual_add_modules brcmfmac brcmutil cfg80211 rfkill ipv6
+
+copy_exec /sbin/wpa_supplicant /sbin
+copy_exec /sbin/wpa_cli /sbin
+copy_exec /sbin/iw /sbin
+copy_exec /sbin/wpa_action /sbin
+copy_file config "$myFiles"/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+copy_file config /etc/wpa_supplicant/action_wpa.sh /etc/wpa_supplicant/action_wpa.sh
+copy_file config /etc/wpa_supplicant/functions.sh /etc/wpa_supplicant/functions.sh
+copy_file config /etc/wpa_supplicant/ifupdown.sh /etc/wpa_supplicant/ifupdown.sh
+
+copy_file config /lib/firmware/brcm/brcmfmac43430-sdio.txt /usr/lib/firmware/brcm/brcmfmac43430-sdio.txt
+copy_file config /lib/firmware/brcm/brcmfmac43455-sdio.txt /usr/lib/firmware/brcm/brcmfmac43455-sdio.txt
+copy_file config /lib/firmware/brcm/brcmfmac43455-sdio.clm_blob /usr/lib/firmware/brcm/brcmfmac43455-sdio.clm_blob
+

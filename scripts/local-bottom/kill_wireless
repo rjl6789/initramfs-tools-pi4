@@ -1,0 +1,27 @@
+#!/bin/sh
+PREREQ=""
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+    prereqs
+    exit 0
+    ;;
+esac
+
+echo "Killing wpa_supplicant so the system takes over later."
+if [ -x /sbin/dhcpcd ] ; then
+	echo `/sbin/ip addr`
+	dhcpcd --exit
+	killall dhcpcd
+	for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
+		ifconfig "${i}" down
+	done
+	echo `/sbin/ip addr`
+	sleep 10
+fi
+killall wpa_supplicant
+#kill `cat /run/initram-wpa_supplicant.pid`

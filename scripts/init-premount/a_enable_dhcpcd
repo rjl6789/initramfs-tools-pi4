@@ -1,0 +1,27 @@
+#!/bin/sh
+PREREQ=""
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+    prereqs
+    exit 0
+    ;;
+esac
+
+. /scripts/functions
+export PATH='/sbin:/bin/:/usr/sbin:/usr/bin'
+
+
+# DHCPCD - run before wpa_supplicant ???
+mkdir -p /var/run/dhcpcd
+mkdir -p /var/lib/dhcpcd5
+log_begin_msg "Running dhcpcd...."
+
+/sbin/dhcpcd --nodev -w -L
+
+echo -n "...dhcpcd should have started"
+

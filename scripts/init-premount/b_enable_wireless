@@ -1,0 +1,54 @@
+#!/bin/sh
+PREREQ="a_enable_dhcpcd"
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+    prereqs
+    exit 0
+    ;;
+esac
+
+. /scripts/functions
+export PATH='/sbin:/bin/:/usr/sbin:/usr/bin'
+
+AUTH_LIMIT=30
+INTERFACE="wlan0"
+alias WPACLI="/sbin/wpa_cli -p/tmp/wpa_supplicant -i$INTERFACE "
+
+# Wait for AUTH_LIMIT seconds, then check the status
+limit=${AUTH_LIMIT}
+
+echo -n "Waiting for connection (max ${AUTH_LIMIT} seconds)"
+while [ $limit -ge 0 -a `WPACLI status | grep wpa_state` != "wpa_state=COMPLETED" ]
+do
+    sleep 1
+    echo -n "."
+    limit=`expr $limit - 1`
+done
+echo ""
+
+if [ `WPACLI status | grep wpa_state` != "wpa_state=COMPLETED" ]; then
+  ONLINE=0
+  log_failure_msg "WLAN offline after timeout"
+#  panic
+else
+  ONLINE=1
+  log_success_msg "WLAN online"
+fi
+
+echo "`WPACLI status`"
+echo "."
+echo "."
+echo "."
+echo "`/sbin/ip addr`"
+echo "."
+echo "."
+
+
+#echo "Manually configureing network...\n"
+#ipconfig -t 55 -c any wlan0
+#configure_networking
