@@ -1,29 +1,27 @@
 # initramfs-tools-pi4
 initram for pi4 with wifi
-need cryptsetup, dropbear-run, busybox - note NOT dropbear-initramfs
+need cryptsetup (if encrypting), busybox, secure-delete
 
-## Setup
-```sh
-git init --bare /etc/initramfs-tools/.gitinitram
-alias gitinitram='git --git-dir=/etc/initramfs-tools/.gitinitram/ --work-tree=/etc/initramfs-tools'
-echo "alias gitinitram='git --git-dir=/etc/initramfs-tools/.gitinitram/ --work-tree=/etc/initramfs-tools'" >> /root/.bashrc
-gitinitram config --local status.showUntrackedFiles no
-gitinitram remote add origin https://github.com/USERNAME/GITREPO.git
-```
+run `./install.sh` to install - hopefully this will work, not tested at this point
 
-## Replication
-(relies on rsync to deal with conflicts i.e. if newer on git then will replace local copy):
-```sh
-git clone --separate-git-dir=/etc/initramfs-tools/.gitinitram https://github.com/USERNAME/GITREPO.git gitinitram-tmp
-rsync --update --archive --verbose --exclude '.git' gitinitram-tmp/ /etc/initramfs-tools/
-rm --recursive gitinitram-tmp
-```
+please read the scripts for details
+
+note:
+
+NOT using dropbear (using sshd instead)
+USING dhcpcd for ip address - this could all be a lot simpler if just using static ip
+but my usecase is for moving pi around and no access to router therefore dynamic ip.
 
 
-## Usage
-```sh
-gitinitram status
-gitinitram add .gitconfig
-gitinitram commit -m 'Add gitconfig'
-gitinitram push
-```
+lot's of additional configuration needed for encrypting - will add instructions to this readme later
+
+you'll need to put authorized keys in */usr/local/share/initram_sshd* so you can actually login
+
+(preferably this aren't you machine keys - i.e create keys just for this purpose)
+
+
+todo:
+* write a decent readme!
+* include instructions for encrypting
+* any other config files that need adjusting
+* references to sites where got inspiration

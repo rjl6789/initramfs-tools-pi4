@@ -1,5 +1,5 @@
 #!/bin/sh
-PREREQ="a_enable_dhcpcd"
+PREREQ=""
 prereqs()
 {
     echo "$PREREQ"
@@ -15,9 +15,29 @@ esac
 . /scripts/functions
 export PATH='/sbin:/bin/:/usr/sbin:/usr/bin'
 
+
+# DHCPCD - run before wpa_supplicant ???
+mkdir -p /var/run/dhcpcd
+mkdir -p /var/lib/dhcpcd5
+mkdir -p /var/run/sshd
+mkdir -p /var/run/ssh
+mkdir -p /run/sshd
+mkdir -p /run/ssh
+log_begin_msg "...running dhcpcd...."
+
+/sbin/dhcpcd --nodev -w -L
+
+echo -n "...dhcpcd should have started..."
+
+#
+# WIFI - WPA_SUPPLICANT
+#
+
 AUTH_LIMIT=30
 INTERFACE="wlan0"
-alias WPACLI="/sbin/wpa_cli -p/tmp/wpa_supplicant -i$INTERFACE "
+CTRL_SOCKET="/var/run/wpa_supplicant"
+alias WPACLI="/sbin/wpa_cli -p$CTRL_SOCKET -i$INTERFACE"
+mkdir -p /var/run/wpa_supplicant
 
 # Wait for AUTH_LIMIT seconds, then check the status
 limit=${AUTH_LIMIT}
@@ -42,13 +62,21 @@ fi
 
 echo "`WPACLI status`"
 echo "."
-echo "."
-echo "."
 echo "`/sbin/ip addr`"
 echo "."
-echo "."
-
 
 #echo "Manually configureing network...\n"
 #ipconfig -t 55 -c any wlan0
 #configure_networking
+
+#
+# SSH server
+#
+mkdir -p /var/run/sshd
+mkdir -p /run/sshd
+log_begin_msg "...running sshd...."
+
+/sbin/sshd -p 4748
+
+echo -n "...sshd should have started..."
+

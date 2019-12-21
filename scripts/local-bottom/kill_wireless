@@ -12,7 +12,19 @@ prereqs)
     ;;
 esac
 
-echo "Killing wpa_supplicant so the system takes over later."
+#
+# SSH
+#
+echo "Killing ssh..."
+if [ -r /var/run/sshd.pid ]; then
+	kill "`cat /var/run/sshd.pid`"
+	killall sshd >dev/null 2>&1
+fi
+
+#
+# DHCPCD
+#
+echo "Killing dhcpcd..."
 if [ -x /sbin/dhcpcd ] ; then
 	echo `/sbin/ip addr`
 	dhcpcd --exit
@@ -21,7 +33,11 @@ if [ -x /sbin/dhcpcd ] ; then
 		ifconfig "${i}" down
 	done
 	echo `/sbin/ip addr`
-	sleep 10
+	sleep 5
 fi
+
+#
+# WIFI
+#
+echo "Killing wpa_supplicant..."
 killall wpa_supplicant
-#kill `cat /run/initram-wpa_supplicant.pid`

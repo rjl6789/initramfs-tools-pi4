@@ -1,0 +1,105 @@
+#!/bin/sh
+set -e
+PREREQ=""
+prereqs()
+{
+    echo "${PREREQ}"
+}
+case "${1}" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Utility executables
+
+copy_exec /usr/bin/sdmem /usr/bin
+copy_exec /sbin/fdisk /sbin
+copy_exec /sbin/dumpe2fs /sbin
+copy_exec /sbin/resize2fs /sbin
+copy_exec /bin/lsblk /sbin
+copy_exec /sbin/blkid /sbin
+copy_exec /sbin/e2fsck /sbin
+
+# wifi modules
+manual_add_modules brcmfmac brcmutil cfg80211 rfkill ipv6
+copy_file config /lib/firmware/brcm/brcmfmac43430-sdio.txt /usr/lib/firmware/brcm/brcmfmac43430-sdio.txt
+copy_file config /lib/firmware/brcm/brcmfmac43455-sdio.txt /usr/lib/firmware/brcm/brcmfmac43455-sdio.txt
+copy_file config /lib/firmware/brcm/brcmfmac43455-sdio.clm_blob /usr/lib/firmware/brcm/brcmfmac43455-sdio.clm_blob
+
+keys="/usr/local/share/initram_sshd"
+
+temp_dir="`mktemp -d`"
+
+#
+# set up root home
+#
+home=$(mktemp -d "$DESTDIR/root-XXXXXX")
+chmod 0700 "$home"
+for x in passwd group; do echo "$x: files"; done >"$DESTDIR/etc/nsswitch.conf"
+echo "root:*:0:0::${home#$DESTDIR}:/bin/sh" >"$DESTDIR/etc/passwd"
+echo "sshd:*:22:22::/run/sshd:/usr/sbin/nologin" >> "$DESTDIR/etc/passwd"
+echo "root:!:0:" >"$DESTDIR/etc/group"
+echo "netdev:!:109:" >"$DESTDIR/etc/group"
+
+#
+# set up the ssh server
+#
+copy_exec /usr/sbin/sshd
+LIBC_DIR=$(ldd /usr/sbin/sshd | sed -nr 's#.* => (/lib.*)/libc\.so\.[0-9.-]+ \(0x[[:xdigit:]]+\)$#\1#p')
+find -L "$LIBC_DIR" -maxdepth 1 -name 'libnss_files.*' -type f | while read so; do
+    copy_exec "$so"
+done
+
+for k in dsa ecdsa rsa ed25519; do
+     copy_file config "/etc/ssh/ssh_host_${k}_key"
+     copy_file config "/etc/ssh/ssh_host_${k}_key.pub"
+done
+copy_file config "/etc/ssh/moduli"
+copy_file config "/etc/ssh/ssh_import_id"
+(
+    echo "PidFile /var/run/sshd.pid"
+    echo "PermitRootLogin prohibit-password"
+) > "${DESTDIR}/etc/ssh/sshd_config"
+chmod 0600 "${DESTDIR}/etc/ssh/sshd_config"
+
+#
+# Copy authorized_keys
+#
+mkdir -m0700 "$home/.ssh"
+if [ -e "${keys}/authorized_keys" ]; then
+    cat "${keys}/authorized_keys"
+fi >"$home/.ssh/authorized_keys"
+
+#
+# DHCPCD
+#
+
+# Use dhcpcd instead of the "default" configure-networking initramfs-tools script
+# as had isues obtaining an ip automaticaly - if your running a fixed ip the you're
+# better off running the configure-networking script that comes with initramfs-tools
+# in one of your init-premount scripts
+
+copy_exec /sbin/dhcpcd /sbin
+copy_file config /etc/dhcpcd.conf
+# copy in dhcpcd helper hooks
+find /usr/share/dhcpcd/ /lib/dhcpcd/ -type f -exec cp --parents \{\} "${DESTDIR}" \;
+# modify one of these files - busybox 'logger' app doesn't have the -i option
+sed -i 's/logger -i/logger/' "${DESTDIR}/lib/dhcpcd/dhcpcd-run-hooks"
+
+#
+# WPA_SUPPLICANT
+#
+wpa_dir="/etc/wpa_supplicant"
+copy_exec /sbin/wpa_supplicant /sbin
+copy_exec /sbin/wpa_cli /sbin
+copy_exec /sbin/iw /sbin
+copy_exec /sbin/wpa_action /sbin
+copy_file config "${wpa_dir}/wpa_supplicant.conf"
+copy_file config "${wpa_dir}/action_wpa.sh"
+copy_file config "${wpa_dir}/functions.sh"
+copy_file config "${wpa_dir}/ifupdown.sh"
+
