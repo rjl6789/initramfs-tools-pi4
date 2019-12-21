@@ -7,11 +7,8 @@ run `./install.sh` to install - hopefully this will work, not tested at this poi
 please read the scripts for details
 
 note:
-
 NOT using dropbear (using sshd instead)
-USING dhcpcd for ip address - this could all be a lot simpler if just using static ip
-but my usecase is for moving pi around and no access to router therefore dynamic ip.
-
+USING dhcpcd for ip address - this could all be a lot simpler if just using static ip, but my usecase is for moving pi around and no access to router therefore dynamic ip.
 
 lot's of additional configuration needed for encrypting - will add instructions to this readme later
 
