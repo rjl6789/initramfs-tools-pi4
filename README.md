@@ -12,9 +12,9 @@ USING dhcpcd for ip address - this could all be a lot simpler if just using stat
 
 lot's of additional configuration needed for encrypting - will add instructions to this readme later
 
-you'll need to put authorized keys in */usr/local/share/initram_sshd* so you can actually login
+you'll need to put authorized keys in */usr/local/share/initram_sshd/authorized_keys* so you can actually login
 
-(preferably this aren't you machine keys - i.e create keys just for this purpose)
+(preferably these aren't your machine keys - i.e create keys just for this purpose)
 
 
 todo:
