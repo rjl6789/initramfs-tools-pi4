@@ -27,9 +27,15 @@ set -e
 KEYDIR="/usr/local/share/initram_sshd"
 INITRAMTOOLS="/etc/initramfs-tools"
 
+# sshd keys
 mkdir -p "$KEYDIR"
 touch "${KEYDIR}/authorized_keys"
 chmod 600 "${KEYDIR}/authorized_keys"
+ssh-keygen -q -N "" -t dsa -f "${KEYDIR}/ssh_host_dsa_key"
+ssh-keygen -q -N "" -t rsa -f "${KEYDIR}/ssh_host_rsa_key"
+ssh-keygen -q -N "" -t ecdsa -f "${KEYDIR}/ssh_host_ecdsa_key"
+ssh-keygen -q -N "" -t ed25519 -f "${KEYDIR}/ssh_host_ed25519_key"
+
 
 install -m755 -D hooks/pi4-sshd-wifi "${INITRAMTOOLS}/hooks/pi4-sshd-wifi"
 install -m755 -D scripts/init-premount/wifi-sshd-dhcpcd "${INITRAMTOOLS}/scripts/init-premount/wifi-sshd-dhcpcd"

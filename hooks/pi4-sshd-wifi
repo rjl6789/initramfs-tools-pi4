@@ -55,8 +55,8 @@ find -L "$LIBC_DIR" -maxdepth 1 -name 'libnss_files.*' -type f | while read so; 
 done
 
 for k in dsa ecdsa rsa ed25519; do
-     copy_file config "/etc/ssh/ssh_host_${k}_key"
-     copy_file config "/etc/ssh/ssh_host_${k}_key.pub"
+     copy_file config "${keys}/ssh_host_${k}_key"
+     copy_file config "${keys}/ssh_host_${k}_key.pub"
 done
 copy_file config "/etc/ssh/moduli"
 copy_file config "/etc/ssh/ssh_import_id"
