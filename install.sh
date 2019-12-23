@@ -22,15 +22,10 @@ else
     echo "busybox is NOT installed!"
     exit 1
 fi
-echo " "
-echo "if encrypting, make sure /etc/cryptsetup-initramfs/conf-hook has:"
-echo "   CRYPTSETUP=y"
-echo " and cryptsetup is installed :-)"
-echo " "
 set -e
 
 KEYDIR="/usr/local/share/initram_sshd"
-INITRAMTOOLS="/etc/initram-tools"
+INITRAMTOOLS="/etc/initramfs-tools"
 
 mkdir -p "$KEYDIR"
 touch "${KEYDIR}/authorized_keys"
@@ -45,10 +40,15 @@ echo " "
 echo "etc/initramfs-tools/initramfs.conf needs:"
 echo "   BUSYBOX=y"
 echo " "
+echo " "
+echo "if encrypting, make sure /etc/cryptsetup-initramfs/conf-hook has:"
+echo "   CRYPTSETUP=y"
+echo " and cryptsetup is installed :-)"
+echo " "
 echo "to build initramfs run:"
 echo "   update-initramfs -c -k $(uname -r)"
 echo " "
-echo "also if modify /boot/config.txt ( and if encrypting /boot/cmdline.txt) as per README"
+echo "also modify /boot/config.txt ( and if encrypting /boot/cmdline.txt)"
 echo "e.g."
 echo "head -1 /boot/config.txt: initramfs initrd.img-4.19.75-v7l+ followkernel"
 echo " "

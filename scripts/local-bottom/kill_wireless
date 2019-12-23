@@ -12,32 +12,46 @@ prereqs)
     ;;
 esac
 
+lockdir="/tmp/initram-locks"
+
 #
 # SSH
 #
+# killing it multiple ways - it really should be dead by the end of this
 echo "Killing ssh..."
 if [ -r /var/run/sshd.pid ]; then
 	kill "`cat /var/run/sshd.pid`"
-	killall sshd >dev/null 2>&1
+	killall sshd > /dev/null 2>&1
 fi
+
+if [ -r "${lockdir}/sshd.pid" ]; then
+        kill "`cat ${lockdir}/sshd.pid`" > /dev/null 2>&1
+	killall sshd > /dev/null 2>&1
+fi
+
+killall sshd > /dev/null 2>&1
 
 #
 # DHCPCD
 #
-echo "Killing dhcpcd..."
-if [ -x /sbin/dhcpcd ] ; then
-	echo `/sbin/ip addr`
-	dhcpcd --exit
-	killall dhcpcd
-	for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
-		ifconfig "${i}" down
-	done
-	echo `/sbin/ip addr`
-	sleep 5
+echo "Killing dhcpcd..." # and probably wpa_supplicant along with it....maybe
+for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
+	ifconfig "${i}" down
+done
+
+dhcpcd --exit > /dev/null 2>&1
+
+if [ -r "${lockdir}/dhcpcd.pid" ]; then
+        kill "`cat ${lockdir}/dhcpcd.pid`" > /dev/null 2>&1
+        killall dhcpcd > /dev/null 2>&1
 fi
+
+killall dhcpcd > /dev/null 2>&1
+
+sleep 2
 
 #
 # WIFI
 #
 echo "Killing wpa_supplicant..."
-killall wpa_supplicant
+killall wpa_supplicant > /dev/null 2>&1
