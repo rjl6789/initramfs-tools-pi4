@@ -27,7 +27,7 @@ mkdir -p /var/run/dhcpcd
 mkdir -p /var/lib/dhcpcd5
 log_begin_msg "...running dhcpcd...."
 
-/sbin/dhcpcd --nodev -w -L
+/sbin/dhcpcd --nodev -w -L &
 echo "$!" > "${lockdir}/dhcpcd.pid"
 
 echo -n "...dhcpcd should have started..."
@@ -79,7 +79,7 @@ mkdir -p /run/sshd
 mkdir -p /run/ssh
 log_begin_msg "...running sshd...."
 
-/sbin/sshd -p 4748
+/sbin/sshd -p 4748 &
 echo "$!" > "${lockdir}/sshd.pid"
 
 echo -n "...sshd should have started..."

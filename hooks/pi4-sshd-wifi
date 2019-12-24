@@ -17,6 +17,7 @@ esac
 # Utility executables
 
 copy_exec /usr/bin/sdmem /usr/bin
+copy_exec /usr/bin/pgrep /usr/bin
 copy_exec /sbin/fdisk /sbin
 copy_exec /sbin/dumpe2fs /sbin
 copy_exec /sbin/resize2fs /sbin

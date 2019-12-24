@@ -20,7 +20,7 @@ lockdir="/tmp/initram-locks"
 # killing it multiple ways - it really should be dead by the end of this
 echo "Killing ssh..."
 if [ -r /var/run/sshd.pid ]; then
-	kill "`cat /var/run/sshd.pid`"
+	kill "`cat /var/run/sshd.pid`" > /dev/null 2>&1
 	killall sshd > /dev/null 2>&1
 fi
 
@@ -30,28 +30,38 @@ if [ -r "${lockdir}/sshd.pid" ]; then
 fi
 
 killall sshd > /dev/null 2>&1
+kill -9 `pgrep -f sshd` > /dev/null 2>&1
 
-#
-# DHCPCD
-#
-echo "Killing dhcpcd..." # and probably wpa_supplicant along with it....maybe
-for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
-	ifconfig "${i}" down
-done
-
-dhcpcd --exit > /dev/null 2>&1
-
-if [ -r "${lockdir}/dhcpcd.pid" ]; then
-        kill "`cat ${lockdir}/dhcpcd.pid`" > /dev/null 2>&1
-        killall dhcpcd > /dev/null 2>&1
-fi
-
-killall dhcpcd > /dev/null 2>&1
-
-sleep 2
-
+find /var/run/ -name '*sshd*' -exec rm -rf {} \;
+find /var/run/ -name '*ssh*' -exec rm -rf {} \;
+find /run/ -name '*sshd*' -exec rm -rf {} \;
+find /run/ -name '*ssh*' -exec rm -rf {} \;
 #
 # WIFI
 #
 echo "Killing wpa_supplicant..."
 killall wpa_supplicant > /dev/null 2>&1
+kill -9 `pgrep -f wpa_supplicant` > /dev/null 2>&1
+find /var/run/ -name '*wpa_supplicant*' -exec rm -rf {} \;
+find /run/ -name '*wpa_supplicant*' -exec rm -rf {} \;
+sleep 2
+
+#
+# DHCPCD
+#
+echo "Killing dhcpcd..." # and probably wpa_supplicant along with it....maybe
+#for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
+#	ifconfig "${i}" down
+#done
+
+#dhcpcd --exit > /dev/null 2>&1
+
+if [ -r /var/run/dhcpcd.pid ]; then
+	kill -9 "`cat /var/run/dhcpcd.pid`" > /dev/null 2>&1
+fi
+
+killall dhcpcd > /dev/null 2>&1
+kill -9 `pgrep -f dhcpcd` > /dev/null 2>&1
+
+find /var/run/ -name '*dhcpcd*' -exec rm -rf {} \;
+find /run/ -name '*dhcpcd*' -exec rm -rf {} \;
