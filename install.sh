@@ -23,6 +23,13 @@ else
     exit 1
 fi
 
+dpkg -s udhcpc &> /dev/null
+if [ $? -eq 0 ]; then
+    echo "udhcpc  is installed!"
+else
+    echo "udhcpc is NOT installed!"
+    exit 1
+fi
 KEYDIR="/usr/local/share/initram_sshd"
 INITRAMTOOLS="/etc/initramfs-tools"
 
