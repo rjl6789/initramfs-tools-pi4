@@ -20,67 +20,90 @@ lockdir="/tmp/initram-locks"
 mkdir -p "$lockdir"
 
 ctrldir="/var/run/wpa_supplicant"
-mkdir -p $ctrldir
+mkdir -p "$ctrldir"
+if [ -d "$ctrldir" ]; then
+	echo "...created control directory..."
+fi
 
-# DHCPCD - run before wpa_supplicant ???
-mkdir -p /var/run/dhcpcd
-mkdir -p /var/lib/dhcpcd5
-log_begin_msg "...running dhcpcd...."
+echo "...interfaces before networking configured..."
+ip addr
 
-/sbin/dhcpcd --nodev -w -L &
-echo "$!" > "${lockdir}/dhcpcd.pid"
+echo "..waiting for wlan kernel module to be loaded..."
+sleep 20
 
-echo -n "...dhcpcd should have started..."
+ifconfig wlan0 up
 
 #
 # WIFI - WPA_SUPPLICANT
 #
 
-AUTH_LIMIT=30
 INTERFACE="wlan0"
+AUTH_LIMIT=300
+limit=${AUTH_LIMIT}
 alias WPACLI="/sbin/wpa_cli -p$ctrldir -i$INTERFACE "
+wpa_supplicant_conf="/etc/wpa_supplicant/wpa_supplicant.conf"
+wpa_supplicant_driver="${wpa_supplicant_driver:-nl80211,wext}"
+driver=${wpa_supplicant_driver:+-D}$wpa_supplicant_driver
+
+echo "...calling wpa_cli status..."
+wpa_cli -p "$ctrldir" -i "$INTERFACE" status >/dev/null 2>&1 && return 0
+echo " "
+echo "...running wpa_supplicant..."
+wpa_supplicant -B -c"$wpa_supplicant_conf" -i"$INTERFACE" "$driver" 2>&1 &
+sleep 10
+# obtain a lease
+udhcpc -t 5 -q -i "$INTERFACE" -s /etc/udhcpc/default.script >/dev/null 2>&1 &
+udhcpc -t 5 -q -i eth0 -s /etc/udhcpc/default.script >/dev/null 2>&1 &
+echo " "
+echo "...waiting for lease..."
 
 # Wait for AUTH_LIMIT seconds, then check the status
-limit=${AUTH_LIMIT}
-
-echo -n "Waiting for connection (max ${AUTH_LIMIT} seconds)"
-while [ $limit -ge 0 -a `WPACLI status | grep wpa_state` != "wpa_state=COMPLETED" ]
+echo "...Waiting for connection (max ${AUTH_LIMIT} seconds)..."
+state="ctrl doesn't exist"
+while [ $limit -ge 0 ] && [ "$state" != "wpa_state=COMPLETED" ]
 do
     sleep 1
-    echo -n "."
+    echo -n ".../"
     limit=`expr $limit - 1`
+    if [ -e "${ctrldir}/${INTERFACE}" ]; then
+       state=`wpa_cli -p "$ctrldir" -i "$INTERFACE" status | grep wpa_state`
+    else
+       state="ctrl doesn't exist"
+       echo -n "||/"
+    fi
 done
-echo ""
 
-if [ `WPACLI status | grep wpa_state` != "wpa_state=COMPLETED" ]; then
-  ONLINE=0
-  log_failure_msg "WLAN offline after timeout"
+echo "...waiting is over..."
+
+state=`wpa_cli -p "$ctrldir" -i "$INTERFACE" status | grep wpa_state`
+wpa_cli -p "$ctrldir" -i "$INTERFACE" status
+if [ "$state" != "wpa_state=COMPLETED" ]; then
+  ONLINE="no"
+  echo "...WLAN offline after timeout..."
 #  panic
 else
-  ONLINE=1
-  log_success_msg "WLAN online"
+  ONLINE="yes"
+  echo "...WLAN online..."
 fi
-
-echo "`WPACLI status`"
-echo "."
-echo "`/sbin/ip addr`"
-echo "."
 
 #echo "Manually configureing network...\n"
 #ipconfig -t 55 -c any wlan0
 #configure_networking
-
+sleep 10
 #
 # SSH server
 #
-mkdir -p /var/run/sshd
-mkdir -p /var/run/ssh
-mkdir -p /run/sshd
-mkdir -p /run/ssh
-log_begin_msg "...running sshd...."
+if [ "$ONLINE" == "yes" ]; then
+   mkdir -p /var/run/sshd
+   mkdir -p /var/run/ssh
+   mkdir -p /run/sshd
+   mkdir -p /run/ssh
+   log_begin_msg "...running sshd...."
 
-/sbin/sshd -p 4748 &
-echo "$!" > "${lockdir}/sshd.pid"
+   /sbin/sshd -p 4748 &
+   echo "$!" > "${lockdir}/sshd.pid"
 
-echo -n "...sshd should have started..."
-
+   echo -n "...sshd should have started..."
+fi
+echo "...Final ip addr is..."
+ip addr

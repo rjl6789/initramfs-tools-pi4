@@ -46,22 +46,3 @@ find /var/run/ -name '*wpa_supplicant*' -exec rm -rf {} \;
 find /run/ -name '*wpa_supplicant*' -exec rm -rf {} \;
 sleep 2
 
-#
-# DHCPCD
-#
-echo "Killing dhcpcd..." # and probably wpa_supplicant along with it....maybe
-#for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
-#	ifconfig "${i}" down
-#done
-
-#dhcpcd --exit > /dev/null 2>&1
-
-if [ -r /var/run/dhcpcd.pid ]; then
-	kill -9 "`cat /var/run/dhcpcd.pid`" > /dev/null 2>&1
-fi
-
-killall dhcpcd > /dev/null 2>&1
-kill -9 `pgrep -f dhcpcd` > /dev/null 2>&1
-
-find /var/run/ -name '*dhcpcd*' -exec rm -rf {} \;
-find /run/ -name '*dhcpcd*' -exec rm -rf {} \;

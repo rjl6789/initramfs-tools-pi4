@@ -24,6 +24,7 @@ copy_exec /sbin/resize2fs /sbin
 copy_exec /bin/lsblk /sbin
 copy_exec /sbin/blkid /sbin
 copy_exec /sbin/e2fsck /sbin
+copy_exec /sbin/udhcpc /sbin
 
 # wifi modules
 manual_add_modules brcmfmac brcmutil cfg80211 rfkill ipv6
@@ -76,22 +77,6 @@ if [ -e "${keys}/authorized_keys" ]; then
 fi >"$home/.ssh/authorized_keys"
 
 #
-# DHCPCD
-#
-
-# Use dhcpcd instead of the "default" configure-networking initramfs-tools script
-# as had isues obtaining an ip automaticaly - if your running a fixed ip the you're
-# better off running the configure-networking script that comes with initramfs-tools
-# in one of your init-premount scripts
-
-copy_exec /sbin/dhcpcd /sbin
-copy_file config /etc/dhcpcd.conf
-# copy in dhcpcd helper hooks
-find /usr/share/dhcpcd/ /lib/dhcpcd/ -type f -exec cp --parents \{\} "${DESTDIR}" \;
-# modify one of these files - busybox 'logger' app doesn't have the -i option
-sed -i 's/logger -i/logger/' "${DESTDIR}/lib/dhcpcd/dhcpcd-run-hooks"
-
-#
 # WPA_SUPPLICANT
 #
 wpa_dir="/etc/wpa_supplicant"
@@ -104,3 +89,6 @@ copy_file config "${wpa_dir}/action_wpa.sh"
 copy_file config "${wpa_dir}/functions.sh"
 copy_file config "${wpa_dir}/ifupdown.sh"
 
+#BUSYBOX DHCP
+copy_file config "/etc/udhcpc/default.script"
+chmod +x "${DESTDIR}/etc/udhcpc/default.script"
