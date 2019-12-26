@@ -32,17 +32,29 @@ fi
 killall sshd > /dev/null 2>&1
 kill -9 `pgrep -f sshd` > /dev/null 2>&1
 
-find /var/run/ -name '*sshd*' -exec rm -rf {} \;
-find /var/run/ -name '*ssh*' -exec rm -rf {} \;
-find /run/ -name '*sshd*' -exec rm -rf {} \;
-find /run/ -name '*ssh*' -exec rm -rf {} \;
+find /var/run/ -name '*sshd*' -exec rm -rf {} \; > /dev/null 2>&1
+find /var/run/ -name '*ssh*' -exec rm -rf {} \; > /dev/null 2>&1
+find /run/ -name '*sshd*' -exec rm -rf {} \; > /dev/null 2>&1
+find /run/ -name '*ssh*' -exec rm -rf {} \; > /dev/null 2>&1
 #
 # WIFI
 #
 echo "Killing wpa_supplicant..."
 killall wpa_supplicant > /dev/null 2>&1
 kill -9 `pgrep -f wpa_supplicant` > /dev/null 2>&1
-find /var/run/ -name '*wpa_supplicant*' -exec rm -rf {} \;
-find /run/ -name '*wpa_supplicant*' -exec rm -rf {} \;
+find /var/run/ -name '*wpa_supplicant*' -exec rm -rf {} \; > /dev/null 2>&1
+find /run/ -name '*wpa_supplicant*' -exec rm -rf {} \; > /dev/null 2>&1
 sleep 2
+
+kill -9 `pgrep -f udhcpc` > /dev/null 2>&1
+
+for i in $(ifconfig | grep -ve '^$' -e '^ ' -e '^lo ' | cut -d' ' -f1); do
+	ifconfig "${i}" down
+done
+
+#blank resolvconf
+echo " " > /etc/resolv.conf
+
+#remove wifi module
+modprobe -r brcmfmac
 
