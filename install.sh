@@ -45,6 +45,7 @@ ssh-keygen -q -N "" -t ed25519 -f "${KEYDIR}/ssh_host_ed25519_key"
 set -e
 
 install -m755 -D hooks/pi4-sshd-wifi "${INITRAMTOOLS}/hooks/pi4-sshd-wifi"
+install -m755 -D hooks/initramfs-tools-update-rpi-initramfs "${INITRAMTOOLS}/hooks/initramfs-tools-update-rpi-initramfs"
 install -m755 -D scripts/init-premount/wifi-sshd-udhcpc "${INITRAMTOOLS}/scripts/init-premount/wifi-sshd-udhcpc"
 install -m755 -D scripts/init-top/sdmem "${INITRAMTOOLS}/scripts/init-top/sdmem"
 install -m755 -D scripts/local-bottom/kill_wireless "${INITRAMTOOLS}/scripts/local-bottom/kill_wireless"
